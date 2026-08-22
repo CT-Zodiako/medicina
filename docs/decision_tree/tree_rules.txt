@@ -1,0 +1,46 @@
+|--- INST_ORIGEN_NO OFICIAL - CORPORACIÓN <= 0.50
+|   |--- INST_CARACTER_ACADEMICO_INSTITUCIÓN UNIVERSITARIA <= 0.50
+|   |   |--- EDAD <= 28.50
+|   |   |   |--- INST_NOMBRE_INSTITUCION_UNIVERSIDAD DE BOYACA - UNIBOYACA-TUNJA <= 0.50
+|   |   |   |   |--- value: [179.47]
+|   |   |   |--- INST_NOMBRE_INSTITUCION_UNIVERSIDAD DE BOYACA - UNIBOYACA-TUNJA >  0.50
+|   |   |   |   |--- value: [157.61]
+|   |   |--- EDAD >  28.50
+|   |   |   |--- ESTU_INSE_INDIVIDUAL <= 63.17
+|   |   |   |   |--- value: [159.71]
+|   |   |   |--- ESTU_INSE_INDIVIDUAL >  63.17
+|   |   |   |   |--- value: [172.59]
+|   |--- INST_CARACTER_ACADEMICO_INSTITUCIÓN UNIVERSITARIA >  0.50
+|   |   |--- INST_NOMBRE_INSTITUCION_FUNDACION UNIVERSITARIA DE CIENCIAS DE LA SALUD-BOGOTÁ D.C. <= 0.50
+|   |   |   |--- INST_NOMBRE_INSTITUCION_FUNDACION UNIVERSITARIA SANITAS-BOGOTÁ D.C. <= 0.50
+|   |   |   |   |--- value: [152.02]
+|   |   |   |--- INST_NOMBRE_INSTITUCION_FUNDACION UNIVERSITARIA SANITAS-BOGOTÁ D.C. >  0.50
+|   |   |   |   |--- value: [165.73]
+|   |   |--- INST_NOMBRE_INSTITUCION_FUNDACION UNIVERSITARIA DE CIENCIAS DE LA SALUD-BOGOTÁ D.C. >  0.50
+|   |   |   |--- EDAD <= 24.50
+|   |   |   |   |--- value: [174.10]
+|   |   |   |--- EDAD >  24.50
+|   |   |   |   |--- value: [165.03]
+|--- INST_ORIGEN_NO OFICIAL - CORPORACIÓN >  0.50
+|   |--- INST_NOMBRE_INSTITUCION_UNIVERSIDAD DE LOS ANDES-BOGOTÁ D.C. <= 0.50
+|   |   |--- INST_NOMBRE_INSTITUCION_UNIVERSIDAD ICESI-CALI <= 0.50
+|   |   |   |--- EDAD <= 27.50
+|   |   |   |   |--- value: [154.98]
+|   |   |   |--- EDAD >  27.50
+|   |   |   |   |--- value: [145.90]
+|   |   |--- INST_NOMBRE_INSTITUCION_UNIVERSIDAD ICESI-CALI >  0.50
+|   |   |   |--- ESTU_GENERO_M <= 0.50
+|   |   |   |   |--- value: [184.34]
+|   |   |   |--- ESTU_GENERO_M >  0.50
+|   |   |   |   |--- value: [189.35]
+|   |--- INST_NOMBRE_INSTITUCION_UNIVERSIDAD DE LOS ANDES-BOGOTÁ D.C. >  0.50
+|   |   |--- EDAD <= 26.50
+|   |   |   |--- PERIODO_20243 <= 0.50
+|   |   |   |   |--- value: [197.70]
+|   |   |   |--- PERIODO_20243 >  0.50
+|   |   |   |   |--- value: [189.08]
+|   |   |--- EDAD >  26.50
+|   |   |   |--- FAMI_CUANTOSCOMPARTEBAÑO_NINGUNA <= 0.50
+|   |   |   |   |--- value: [191.95]
+|   |   |   |--- FAMI_CUANTOSCOMPARTEBAÑO_NINGUNA >  0.50
+|   |   |   |   |--- value: [185.38]
