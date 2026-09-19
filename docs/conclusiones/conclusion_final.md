@@ -6,7 +6,7 @@ El resultado más consistente de los análisis es que las variables de **institu
 
 Esto describe **asociaciones predictivas**, no efectos causales. La institución puede representar conjuntamente selección de estudiantes, contexto geográfico, recursos, currículo y otros factores no observados; los modelos no permiten separar esos mecanismos.
 
-El mejor desempeño observado (Random Forest, R²≈0.37) proviene de un único split 80/20 en el que las mismas instituciones pueden aparecer tanto en entrenamiento como en prueba. Al validar con `GroupKFold` agrupando por institución —de modo que las instituciones de validación nunca fueron vistas en entrenamiento— ese R² cae a **0.12 ± 0.15**. Esto es evidencia de que buena parte del desempeño original reflejaba memorización de instituciones específicas del set de entrenamiento, más que una generalización genuina a instituciones nuevas. A nivel de variable individual, permutation importance agrupada lo confirma de forma directa: `INST_NOMBRE_INSTITUCION` cae del puesto #1 al #24 de 27 al medir su aporte real en validación (caída de R² ≈0), mientras que `INST_ORIGEN` e `INST_CARACTER_ACADEMICO` se mantienen —y suben— como las dos variables más importantes bajo este método más robusto. El detalle está en la sección "Validación de robustez" más abajo.
+El mejor desempeño observado (Random Forest, R²≈0.37) proviene de un único split 80/20 en el que las mismas instituciones pueden aparecer tanto en entrenamiento como en prueba. Al validar con `GroupKFold` agrupando por institución —de modo que las instituciones de validación nunca fueron vistas en entrenamiento— ese R² cae a **0.12 ± 0.15**. Esto es evidencia de que buena parte del desempeño original reflejaba memorización de instituciones específicas del set de entrenamiento, más que una generalización genuina a instituciones nuevas. A nivel de variable individual, permutation importance agrupada lo confirma de forma directa: `INST_NOMBRE_INSTITUCION` cae del puesto #1 al #24 de 27 al medir su aporte real en validación (caída de R² ≈0), mientras que `INST_ORIGEN` e `INST_CARACTER_ACADEMICO` se mantienen —y suben— como las dos variables más importantes bajo este método más robusto. El detalle está en la sección "Validación de robustez" más abajo. Combinando la señal institucional que sí es real (tipo de institución) con las variables demográficas y socioeconómicas, y validando de nuevo con `GroupKFold` por institución, el modelo alcanza **R²≈0.23 (0.229 ± 0.087)**: es el número que el proyecto sostiene con más confianza como desempeño honesto y generalizable, y se desarrolla en la subsección "Etapa 8" de "Validación de robustez".
 
 ## Datos y metodología
 
@@ -194,6 +194,41 @@ En cambio, `INST_ORIGEN` e `INST_CARACTER_ACADEMICO` —variables de institució
 
 La conclusión que deja etapa 7 no es "institución no importa": es que el **tipo/origen de institución es señal real y generalizable**, mientras que la **identidad puntual de la institución es un artefacto de memorización que MDI infla por su alta cardinalidad** y que no debe usarse como variable predictiva confiable fuera de la muestra de instituciones vistas en entrenamiento.
 
+### Etapa 8 — Modelo final recomendado: señal institucional real + validación honesta
+
+Las etapas 5, 6 y 7 diagnostican el problema por partes; la etapa 8 lo resuelve en un único modelo. Se reentrena el mismo Random Forest de referencia (`n_estimators=300, max_depth=8, min_samples_leaf=20`) combinando lo que etapa 7 confirmó como señal institucional real y transferible (`INST_ORIGEN`, `INST_CARACTER_ACADEMICO`) con las variables socioeconómicas y demográficas de etapa 5, y excluye explícitamente las tres variables que etapa 6 y etapa 7 identificaron como memorización (`INST_NOMBRE_INSTITUCION`, `ESTU_INST_DEPARTAMENTO`, `ESTU_INST_MUNICIPIO`). La validación usa el mismo esquema `GroupKFold(n_splits=5)` agrupando por `INST_NOMBRE_INSTITUCION` de etapa 6 —esa columna define los folds pero nunca entra como feature del modelo—, de modo que las instituciones de validación nunca fueron vistas en entrenamiento:
+
+| Métrica | Valor |
+|---|---:|
+| R² | 0.229 ± 0.087 |
+| MAE | 16.30 |
+| RMSE | 21.37 |
+
+Comparación de R² entre las cuatro configuraciones evaluadas en el proyecto:
+
+| Etapa | Feature set institucional | Validación | R² |
+|---|---|---|---:|
+| Etapa 3 | Las 5 variables institucionales (incluye memorización) | Split único 80/20 (instituciones compartidas train/test) | 0.374 |
+| Etapa 5 | Ninguna variable institucional | KFold aleatorio k=5 | 0.186 ± 0.011 |
+| Etapa 6 | Las 5 variables institucionales (incluye memorización) | GroupKFold k=5 (instituciones nunca vistas) | 0.120 ± 0.146 |
+| **Etapa 8 (recomendado)** | **Solo `INST_ORIGEN` + `INST_CARACTER_ACADEMICO`** | **GroupKFold k=5 (instituciones nunca vistas)** | **0.229 ± 0.087** |
+
+Etapa 8 supera tanto a etapa 5 (+0.043) como a etapa 6 (+0.109) en su propia validación honesta por institución, y lo hace con menos varianza entre folds que etapa 6 (std=0.087 vs. 0.146). Esto confirma, con el mismo esquema de validación riguroso, lo que etapa 7 ya mostraba a nivel de variable individual: `INST_ORIGEN` e `INST_CARACTER_ACADEMICO` aportan poder predictivo real y transferible a instituciones nuevas, y aislarlos de las tres variables de memorización recupera desempeño sin sacrificar la honestidad de la validación.
+
+Las variables más importantes del modelo final (importancia MDI media entre los 5 folds) son:
+
+| Variable | Importancia media |
+|---|---:|
+| `INST_ORIGEN_NO OFICIAL - CORPORACIÓN` | 0.281 |
+| `EDAD` | 0.119 |
+| `INST_CARACTER_ACADEMICO_INSTITUCIÓN UNIVERSITARIA` | 0.118 |
+| `INST_CARACTER_ACADEMICO_UNIVERSIDAD` | 0.111 |
+| `ESTU_INSE_INDIVIDUAL` | 0.086 |
+
+Las cuatro variables institucionales retenidas (`INST_ORIGEN_*`, `INST_CARACTER_ACADEMICO_*`) concentran juntas más de la mitad de la importancia total, seguidas por `EDAD` y `ESTU_INSE_INDIVIDUAL` como principales predictores no institucionales.
+
+Este es el modelo y el feature set que el proyecto recomienda para producción o cualquier uso real: variables socioeconómicas y demográficas del estudiante (`ESTU_INSE_INDIVIDUAL`, `EDAD`, `ESTU_GENERO`, etc.), variables familiares (`FAMI_*`), variables de matrícula/trabajo (`ESTU_PAGOMATRICULA*`, `ESTU_HORASSEMANATRABAJA`) y únicamente `INST_ORIGEN` + `INST_CARACTER_ACADEMICO` como señal institucional — nunca `INST_NOMBRE_INSTITUCION`, `ESTU_INST_DEPARTAMENTO` ni `ESTU_INST_MUNICIPIO`, que no generalizan a instituciones nuevas y solo inflarían artificialmente el desempeño aparente sobre datos históricos.
+
 ## Limitaciones
 
 - **Asociación no es causalidad:** no se puede atribuir el puntaje a una institución o característica particular.
@@ -212,4 +247,4 @@ Desde la raíz del repositorio, las técnicas se ejecutan con los scripts docume
 python docs/conclusiones/generar_pdf.py
 ```
 
-El generador lee los rankings CSV existentes y produce el PDF en `docs/conclusiones/Analisis_Completo_Saber_Pro_Medicina.pdf` (y una copia con nombre descriptivo `Analisis_Variables_Puntaje_Global.pdf`). Fuentes principales: `docs/etapa_1_mutual_information/mutual_info_ranking_24.csv`, `mutual_info_ranking_78.csv`, `docs/etapa_2_decision_tree/feature_importance.csv`, `docs/etapa_3_random_forest_shap/rf_feature_importance.csv`, `shap_ranking.csv`, los scripts `*_analysis.py`, `tree_rules.txt` y las visualizaciones PCA/UMAP/SHAP. La validación de robustez usa además `docs/etapa_5_sin_institucion_cv/random_forest_sin_institucion_cv.py`, `metrics_cv.csv` y `feature_importance_cv.csv`; `docs/etapa_6_groupkfold_institucion/random_forest_groupkfold_institucion.py`, `metrics_groupkfold.csv` y `feature_importance_groupkfold.csv`; y `docs/etapa_7_permutation_importance/random_forest_permutation_importance.py` con `permutation_vs_mdi_importance.csv`.
+El generador lee los rankings CSV existentes y produce el PDF en `docs/conclusiones/Analisis_Completo_Saber_Pro_Medicina.pdf` (y una copia con nombre descriptivo `Analisis_Variables_Puntaje_Global.pdf`). Fuentes principales: `docs/etapa_1_mutual_information/mutual_info_ranking_24.csv`, `mutual_info_ranking_78.csv`, `docs/etapa_2_decision_tree/feature_importance.csv`, `docs/etapa_3_random_forest_shap/rf_feature_importance.csv`, `shap_ranking.csv`, los scripts `*_analysis.py`, `tree_rules.txt` y las visualizaciones PCA/UMAP/SHAP. La validación de robustez usa además `docs/etapa_5_sin_institucion_cv/random_forest_sin_institucion_cv.py`, `metrics_cv.csv` y `feature_importance_cv.csv`; `docs/etapa_6_groupkfold_institucion/random_forest_groupkfold_institucion.py`, `metrics_groupkfold.csv` y `feature_importance_groupkfold.csv`; `docs/etapa_7_permutation_importance/random_forest_permutation_importance.py` con `permutation_vs_mdi_importance.csv`; y `docs/etapa_8_modelo_final_honesto/random_forest_modelo_final.py` con `metrics_final.csv` y `feature_importance_final.csv`.
