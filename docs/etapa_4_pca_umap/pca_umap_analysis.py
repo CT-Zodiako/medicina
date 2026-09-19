@@ -49,7 +49,7 @@ print("=== Varianza explicada por componente ===")
 print(explained.to_string())
 print("\n=== Varianza explicada acumulada ===")
 print(explained_cum.to_string())
-explained.to_csv("docs/pca_umap/pca_explained_variance.csv", header=["explained_variance_ratio"])
+explained.to_csv("docs/etapa_4_pca_umap/pca_explained_variance.csv", header=["explained_variance_ratio"])
 
 fig, ax = plt.subplots(figsize=(8, 6))
 sc = ax.scatter(pca_coords[:, 0], pca_coords[:, 1], c=work[target], cmap="viridis", s=5, alpha=0.5)
@@ -58,7 +58,7 @@ ax.set_xlabel(f"PC1 ({explained.iloc[0]*100:.1f}% var)")
 ax.set_ylabel(f"PC2 ({explained.iloc[1]*100:.1f}% var)")
 ax.set_title("PCA - coloreado por PUNT_GLOBAL")
 plt.tight_layout()
-plt.savefig("docs/pca_umap/pca_scatter_puntaje.png", dpi=150)
+plt.savefig("docs/etapa_4_pca_umap/pca_scatter_puntaje.png", dpi=150)
 plt.close()
 
 # --- UMAP ---
@@ -70,7 +70,7 @@ sc = ax.scatter(umap_coords[:, 0], umap_coords[:, 1], c=work[target], cmap="viri
 plt.colorbar(sc, label="PUNT_GLOBAL")
 ax.set_title("UMAP - coloreado por PUNT_GLOBAL")
 plt.tight_layout()
-plt.savefig("docs/pca_umap/umap_scatter_puntaje.png", dpi=150)
+plt.savefig("docs/etapa_4_pca_umap/umap_scatter_puntaje.png", dpi=150)
 plt.close()
 
 fig, ax = plt.subplots(figsize=(8, 6))
@@ -80,7 +80,7 @@ for categoria in work["INST_CARACTER_ACADEMICO"].unique():
 ax.legend()
 ax.set_title("UMAP - coloreado por caracter academico")
 plt.tight_layout()
-plt.savefig("docs/pca_umap/umap_scatter_caracter.png", dpi=150)
+plt.savefig("docs/etapa_4_pca_umap/umap_scatter_caracter.png", dpi=150)
 plt.close()
 
-print("\nGraficos guardados en docs/pca_umap/")
+print("\nGraficos guardados en docs/etapa_4_pca_umap/")

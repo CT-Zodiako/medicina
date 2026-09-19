@@ -63,9 +63,9 @@ importances = pd.Series(tree.feature_importances_, index=X.columns).sort_values(
 importances = importances[importances > 0]
 print("\n=== Feature importance (arbol podado) ===")
 print(importances.to_string())
-importances.to_csv("docs/decision_tree/feature_importance.csv", header=["importance"])
+importances.to_csv("docs/etapa_2_decision_tree/feature_importance.csv", header=["importance"])
 
-with open("docs/decision_tree/tree_rules.txt", "w") as f:
+with open("docs/etapa_2_decision_tree/tree_rules.txt", "w") as f:
     f.write(export_text(tree, feature_names=list(X.columns), max_depth=4))
 
-print("\nReglas del arbol guardadas en docs/decision_tree/tree_rules.txt")
+print("\nReglas del arbol guardadas en docs/etapa_2_decision_tree/tree_rules.txt")

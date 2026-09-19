@@ -55,7 +55,7 @@ importances = pd.Series(rf.feature_importances_, index=X.columns).sort_values(as
 importances = importances[importances > 0].head(20)
 print("\n=== Top 20 feature importance (Random Forest, Gini/varianza) ===")
 print(importances.to_string())
-importances.to_csv("docs/random_forest_shap/rf_feature_importance.csv", header=["importance"])
+importances.to_csv("docs/etapa_3_random_forest_shap/rf_feature_importance.csv", header=["importance"])
 
 # SHAP: explica el modelo ya entrenado. Se usa una muestra del test para que el calculo sea rapido.
 sample = X_test.sample(n=min(2000, len(X_test)), random_state=0)
@@ -68,10 +68,10 @@ mean_abs_shap = pd.Series(
 mean_abs_shap = mean_abs_shap[mean_abs_shap > 0].head(20)
 print("\n=== Top 20 variables por SHAP (impacto promedio absoluto en puntos de PUNT_GLOBAL) ===")
 print(mean_abs_shap.to_string())
-mean_abs_shap.to_csv("docs/random_forest_shap/shap_ranking.csv", header=["mean_abs_shap"])
+mean_abs_shap.to_csv("docs/etapa_3_random_forest_shap/shap_ranking.csv", header=["mean_abs_shap"])
 
 plt.figure(figsize=(14, 8))
 shap.summary_plot(shap_values, sample, show=False, max_display=15)
 plt.subplots_adjust(left=0.45)
-plt.savefig("docs/random_forest_shap/shap_summary_plot.png", dpi=150, bbox_inches="tight")
-print("\nGrafico SHAP guardado en docs/random_forest_shap/shap_summary_plot.png")
+plt.savefig("docs/etapa_3_random_forest_shap/shap_summary_plot.png", dpi=150, bbox_inches="tight")
+print("\nGrafico SHAP guardado en docs/etapa_3_random_forest_shap/shap_summary_plot.png")

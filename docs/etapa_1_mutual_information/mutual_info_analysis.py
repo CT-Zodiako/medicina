@@ -42,4 +42,4 @@ mi = mutual_info_regression(X, y, discrete_features=discrete_mask, random_state=
 
 result = pd.Series(mi, index=X.columns).sort_values(ascending=False)
 print(result.to_string())
-result.to_csv("docs/mutual_information/mutual_info_ranking_24.csv", header=["mutual_info"])
+result.to_csv("docs/etapa_1_mutual_information/mutual_info_ranking_24.csv", header=["mutual_info"])
