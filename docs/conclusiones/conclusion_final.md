@@ -258,6 +258,8 @@ La varianza explicada *sube* al quitar la institución, no baja: al remover `INS
 
 ## Reproducibilidad y artefactos
 
+Las dependencias de Python están fijadas con versión exacta en `requirements.txt` (raíz del repositorio). Para instalarlas: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
+
 Desde la raíz del repositorio, las técnicas se ejecutan con los scripts documentados en cada carpeta. El informe se genera con:
 
 ```bash
