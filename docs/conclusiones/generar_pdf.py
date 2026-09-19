@@ -1,335 +1,205 @@
+"""Genera el informe PDF formal a partir de conclusion_final.md y rankings CSV."""
 import base64
+import csv
+import html
+import subprocess
 from pathlib import Path
-from weasyprint import HTML
+
+try:
+    from weasyprint import HTML
+except (ModuleNotFoundError, OSError):  # permite usar el fallback de macOS
+    HTML = None
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
+OUT = DOCS / "conclusiones"
 
 
-def img_b64(path):
-    data = base64.b64encode(Path(path).read_bytes()).decode()
-    return f"data:image/png;base64,{data}"
+def read_ranking(path, value_name, limit=None, key_name=""):
+    with path.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    rows = [(row.get(key_name, ""), float(row[value_name])) for row in rows]
+    return rows if limit is None else rows[:limit]
 
 
-pca_scatter = img_b64(DOCS / "pca_umap" / "pca_scatter_puntaje.png")
-umap_puntaje = img_b64(DOCS / "pca_umap" / "umap_scatter_puntaje.png")
-umap_caracter = img_b64(DOCS / "pca_umap" / "umap_scatter_caracter.png")
-shap_plot = img_b64(DOCS / "random_forest_shap" / "shap_summary_plot.png")
+def table(rows, headers, decimals=4):
+    body = []
+    for row in rows:
+        cells = []
+        for value in row:
+            if isinstance(value, float):
+                value = f"{value:.{decimals}f}"
+            cells.append(f"<td>{html.escape(str(value))}</td>")
+        body.append("<tr>" + "".join(cells) + "</tr>")
+    head = "".join(f"<th>{html.escape(str(h))}</th>" for h in headers)
+    return f'<table><thead><tr>{head}</tr></thead><tbody>{"".join(body)}</tbody></table>'
 
-html = f"""
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  @page {{ size: A4; margin: 2cm; @bottom-center {{ content: counter(page); }} }}
-  body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; font-size: 10.5pt; line-height: 1.5; }}
-  h1 {{ color: #1F4E78; font-size: 22pt; border-bottom: 3px solid #1F4E78; padding-bottom: 8px; }}
-  h2 {{ color: #1F4E78; font-size: 15pt; margin-top: 28px; border-bottom: 1px solid #ccc; padding-bottom: 4px; page-break-before: auto; }}
-  h3 {{ color: #2E5F8A; font-size: 12pt; margin-top: 18px; }}
-  table {{ border-collapse: collapse; width: 100%; table-layout: fixed; margin: 10px 0 16px 0; font-size: 8.5pt; }}
-  th, td {{ border: 1px solid #ccc; padding: 5px 8px; text-align: left; word-wrap: break-word; overflow-wrap: break-word; }}
-  th {{ background-color: #1F4E78; color: white; }}
-  tr:nth-child(even) {{ background-color: #f2f6fa; }}
-  .cover {{ text-align: center; margin-top: 8cm; }}
-  .cover h1 {{ border: none; font-size: 26pt; }}
-  .cover p {{ color: #555; font-size: 12pt; }}
-  .subtitle {{ color: #555; font-size: 11pt; }}
-  .box {{ background: #f2f6fa; border-left: 4px solid #1F4E78; padding: 10px 14px; margin: 14px 0; }}
-  .warn {{ background: #fdf3e7; border-left: 4px solid #c9821f; padding: 10px 14px; margin: 14px 0; }}
-  img {{ max-width: 100%; margin: 10px 0; border: 1px solid #ddd; }}
-  .page-break {{ page-break-before: always; }}
-  code {{ background: #eee; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }}
-  .figcaption {{ font-size: 9pt; color: #666; text-align: center; margin-top: -6px; }}
-</style>
-</head>
-<body>
 
-<div class="cover">
-  <h1>Análisis de Factores que Explican<br>el Puntaje Global — Saber Pro Medicina</h1>
-  <p class="subtitle">Dataset ICFES Saber Pro, Programa de Medicina (Colombia)<br>
-  23.134 estudiantes con las 3 especialidades y puntaje completo<br>
-  Mutual Information · Árbol de Decisión · Random Forest · SHAP · PCA / UMAP</p>
-</div>
+def image_data(path):
+    if not path.exists():
+        return ""
+    return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode()
 
-<div class="page-break"></div>
 
-<h1>1. Resumen Ejecutivo</h1>
-<div class="box">
-<b>La institución donde estudia el estudiante es, con diferencia, el factor más determinante del puntaje global.</b>
-Le siguen, muy por detrás, el carácter académico de la institución (Universidad vs Institución Universitaria),
-la edad del estudiante y el nivel socioeconómico del hogar (estrato, educación de los padres, índice INSE).
-Variables individuales como género o posesión de electrodomésticos casi no aportan señal por sí solas.
-</div>
-<p>Se aplicaron 5 técnicas de análisis independientes sobre el mismo dataset y target
-(<code>PUNT_GLOBAL</code>). Ninguna contradijo a las otras — todas señalan el mismo orden de importancia,
-lo cual da confianza en el resultado.</p>
+mi = read_ranking(DOCS / "etapa_1_mutual_information" / "mutual_info_ranking_24.csv", "mutual_info")
+mi_leak = read_ranking(DOCS / "etapa_1_mutual_information" / "mutual_info_ranking_78.csv", "mutual_info", 20)
+tree = read_ranking(DOCS / "etapa_2_decision_tree" / "feature_importance.csv", "importance")
+rf = read_ranking(DOCS / "etapa_3_random_forest_shap" / "rf_feature_importance.csv", "importance")
+shap = read_ranking(DOCS / "etapa_3_random_forest_shap" / "shap_ranking.csv", "mean_abs_shap")
+cv_importance = read_ranking(
+    DOCS / "etapa_5_sin_institucion_cv" / "feature_importance_cv.csv",
+    "importance_mean", key_name="feature",
+)
+groupkfold_importance = read_ranking(
+    DOCS / "etapa_6_groupkfold_institucion" / "feature_importance_groupkfold.csv",
+    "importance_mean", key_name="feature",
+)
+with (DOCS / "etapa_7_permutation_importance" / "permutation_vs_mdi_importance.csv").open(
+    encoding="utf-8", newline=""
+) as handle:
+    permutation_rows = list(csv.DictReader(handle))
+permutation_by_variable = {row["variable"]: row for row in permutation_rows}
 
-<h2>1.1 Tabla comparativa por técnica</h2>
-<table>
-<tr><th>Técnica</th><th>Qué mide</th><th>Variable #1</th><th>Variable #2</th><th>Variable #3</th></tr>
-<tr><td>Mutual Information (24 cols finales)</td><td>Reducción de incertidumbre, sin asumir linealidad</td>
-<td>INST_NOMBRE_INSTITUCION (0.255)</td><td>INST_ORIGEN (0.059)</td><td>ESTU_INST_MUNICIPIO (0.058)</td></tr>
-<tr><td>Mutual Information (78 cols, validación)</td><td>Igual, sobre dataset completo con fuga incluida</td>
-<td>PERCENTIL_GLOBAL (fuga, 3.26)</td><td>Módulos componentes (fuga, 0.10-0.51)</td><td>INST_NOMBRE_INSTITUCION (0.251, 1ª no-fuga)</td></tr>
-<tr><td>Árbol de decisión (podado, R²=0.29)</td><td>Reducción de varianza por corte</td>
-<td>INST_ORIGEN no oficial (0.322)</td><td>INST_CARACTER_ACADEMICO (0.241)</td><td>Instituciones específicas (Andes, Icesi)</td></tr>
-<tr><td>Random Forest (R²=0.37)</td><td>Reducción de varianza promediada en 300 árboles</td>
-<td>INST_ORIGEN no oficial (0.249)</td><td>INST_NOMBRE_INSTITUCION Andes (0.131)</td><td>INST_CARACTER_ACADEMICO / EDAD (~0.09-0.10)</td></tr>
-<tr><td>SHAP sobre Random Forest</td><td>Impacto real en puntos sobre la predicción</td>
-<td>INST_ORIGEN no oficial (8.35 pts)</td><td>EDAD (2.76 pts)</td><td>INST_CARACTER_ACADEMICO (~2.2-2.3 pts)</td></tr>
-<tr><td>PCA / UMAP</td><td>Estructura visual en espacio reducido</td>
-<td colspan="3">Confirma clusters por institución (55 grupos separados) — no aporta variable nueva</td></tr>
-</table>
+mi_html = table(mi, ["Variable", "MI"])
+leak_html = table(mi_leak, ["Variable (validación 78 columnas)", "MI"])
+tree_html = table(tree, ["Variable/categoría", "Importancia"])
+rf_html = table(rf, ["Variable/categoría", "Importancia"])
+shap_html = table(shap, ["Variable/categoría", "Impacto medio absoluto (puntos)"], 2)
+cv_importance_html = table(cv_importance, ["Variable", "Importancia media (CV k=5, sin institución)"])
+groupkfold_importance_html = table(groupkfold_importance, ["Variable", "Importancia media (GroupKFold k=5, con institución)"])
+permutation_vs_mdi_order = [
+    "INST_ORIGEN",
+    "INST_CARACTER_ACADEMICO",
+    "EDAD",
+    "ESTU_INSE_INDIVIDUAL",
+    "INST_NOMBRE_INSTITUCION",
+    "ESTU_INST_DEPARTAMENTO",
+    "ESTU_INST_MUNICIPIO",
+]
+permutation_vs_mdi_html = table(
+    [
+        [
+            variable,
+            permutation_by_variable[variable]["mdi_rank"],
+            permutation_by_variable[variable]["permutation_rank"],
+            float(permutation_by_variable[variable]["mdi_importance_mean"]),
+            float(permutation_by_variable[variable]["permutation_importance_mean"]),
+        ]
+        for variable in permutation_vs_mdi_order
+    ],
+    ["Variable", "Rank MDI", "Rank permutación", "MDI media", "Permutación media"],
+)
+r2_comparison_html = table(
+    [
+        ["Etapa 3", "Split único 80/20 (instituciones compartidas train/test)", "Sí", "0.374"],
+        ["Etapa 5", "KFold aleatorio, k=5 (instituciones compartidas dentro de cada fold)", "No", "0.186 ± 0.011"],
+        ["Etapa 6", "GroupKFold, k=5 (instituciones de validación nunca vistas)", "Sí", "0.120 ± 0.146"],
+    ],
+    ["Etapa", "Esquema de validación", "¿Incluye institución?", "R²"],
+)
+shap_plot = image_data(DOCS / "etapa_3_random_forest_shap" / "shap_summary_plot.png")
+pca_plot = image_data(DOCS / "etapa_4_pca_umap" / "pca_scatter_puntaje.png")
+umap_plot = image_data(DOCS / "etapa_4_pca_umap" / "umap_scatter_puntaje.png")
 
-<div class="page-break"></div>
-<h1>2. El Dataset</h1>
-<p>Fuente: resultados Saber Pro (ICFES) para el programa de Medicina en Colombia, períodos 2019 a 2024.</p>
-<ul>
-<li><b>43.563</b> estudiantes en el archivo original.</li>
-<li><b>23.134</b> estudiantes tienen las 3 especialidades (Atención en Salud, Fundamentación en Diagnóstico
-y Tratamiento Médico, Promoción de la Salud y Prevención) con puntaje registrado en las 3 — este es el
-subconjunto usado en todo el análisis.</li>
-<li><b>Target</b>: <code>PUNT_GLOBAL</code> (0-278 puntos). Problema de regresión.</li>
-</ul>
+html_doc = f"""<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><style>
+@page {{ size:A4; margin:1.7cm 1.8cm 1.8cm; @bottom-center {{ content:"Página " counter(page); color:#64748b; font-size:8pt; }} }}
+body {{ font-family:Arial,Helvetica,sans-serif; color:#172033; font-size:9.5pt; line-height:1.42; }}
+h1 {{ color:#123b5d; font-size:21pt; border-bottom:3px solid #1d7196; padding-bottom:7px; margin:0 0 14px; }}
+h2 {{ color:#164e70; font-size:14pt; border-bottom:1px solid #b8cbd7; padding-bottom:4px; margin-top:24px; }}
+h3 {{ color:#246b86; font-size:11pt; margin-top:16px; }}
+p {{ margin:7px 0; }} ul,ol {{ margin-top:5px; }}
+table {{ border-collapse:collapse; width:100%; margin:9px 0 14px; font-size:7.5pt; page-break-inside:auto; }}
+thead {{ display:table-header-group; }} tr {{ page-break-inside:avoid; }} th,td {{ border:1px solid #cbd5e1; padding:4px 5px; text-align:left; overflow-wrap:anywhere; }}
+th {{ background:#164e70; color:white; }} tr:nth-child(even) td {{ background:#f3f7fa; }}
+.cover {{ height:22cm; display:flex; flex-direction:column; justify-content:center; text-align:center; }}
+.cover h1 {{ border:0; font-size:27pt; }} .cover .rule {{ width:80px; border-top:4px solid #e49b35; margin:20px auto; }}
+.subtitle {{ color:#526579; font-size:12pt; }} .small {{ color:#64748b; font-size:8.5pt; }}
+.box {{ background:#eef6fa; border-left:5px solid #1d7196; padding:10px 13px; margin:12px 0; }}
+.warn {{ background:#fff6e8; border-left:5px solid #d28a20; padding:10px 13px; margin:12px 0; }}
+.page-break {{ page-break-before:always; }} img {{ max-width:100%; max-height:16cm; display:block; margin:10px auto; border:1px solid #d8e0e7; }}
+.caption {{ text-align:center; color:#64748b; font-size:8pt; }} code {{ font-family:monospace; background:#eef2f5; padding:1px 3px; }}
+</style></head><body>
+<section class="cover"><h1>Variables asociadas con<br><i>PUNT_GLOBAL</i></h1><div class="rule"></div><p class="subtitle">Informe técnico — Saber Pro Medicina (Colombia)</p><p>Mutual Information · Árbol de Decisión · Random Forest · SHAP · PCA/UMAP</p><p class="small">23.134 estudiantes · períodos 2019–2024 · versión generada desde artefactos reproducibles</p></section>
 
-<h2>2.1 Nulos por columna</h2>
-<p>De 80 columnas originales: 44 sin ningún nulo, 36 con nulos. Las más afectadas (&gt;80% nulo) son
-actividades de refuerzo y simulacros — se descartaron por no tener información utilizable. Un segundo bloque
-(variables familiares socioeconómicas) tiene 4-5% de nulos, manejable con imputación por moda.</p>
+<h1>Resumen ejecutivo</h1>
+<div class="box"><b>El tipo de institución es señal real y generalizable; el nombre puntual de la institución no lo es.</b> Nombre, origen y carácter académico ocupan los primeros lugares en todos los métodos predictivos, pero no pesan igual bajo una medición robusta de generalización: <code>INST_ORIGEN</code> e <code>INST_CARACTER_ACADEMICO</code> (tipo de institución) se mantienen como las variables más importantes al medir permutation importance agrupada, mientras que <code>INST_NOMBRE_INSTITUCION</code> cae del puesto #1 (MDI) al #24 de 27, con caída de R² prácticamente nula — evidencia de memorización, no de señal transferible (ver sección 6). Edad e indicadores socioeconómicos aportan señal secundaria; género y muchos bienes del hogar tienen asociación baja. El mejor modelo, Random Forest, alcanza R²=0.37 en un único split 80/20 — pero al validar con <code>GroupKFold</code> agrupando por institución (instituciones de validación nunca vistas en entrenamiento) ese R² cae a 0.12 ± 0.15, evidencia adicional de memorización institucional.</div>
+<p>El hallazgo es predictivo y asociativo: no demuestra que una institución cause un puntaje. El mejor modelo, Random Forest, alcanza R²=0.37 en un único split 80/20, por lo que gran parte de la variación permanece sin explicar. Esa cifra comparte instituciones entre entrenamiento y prueba; bajo validación cruzada agrupada por institución (<code>GroupKFold</code>) el R² cae a ~0.12, y si se remueve la institución por completo (K-Fold sin institución) el R² es ~0.19. El tipo de institución (origen, carácter académico) sigue siendo la señal más asociada y generalizable al puntaje; en cambio, buena parte del desempeño original de 0.37 —y de la importancia del nombre puntual de la institución— reflejaba patrones específicos de las instituciones vistas en entrenamiento, no una capacidad de generalización a instituciones nuevas.</p>
+{table([["Mutual Information", "Institución (0.2549)", "MI univariada; sin techo fijo"], ["Árbol podado", "Origen institucional (0.3223)", "R²=0.2877; MAE=15.84"], ["Random Forest", "Origen institucional (0.2489)", "R²=0.37; MAE=14.77"], ["SHAP", "Origen institucional (8.35 puntos)", "Impacto absoluto medio"], ["PCA / UMAP", "Clusters institucionales", "Confirmación visual"]], ["Método", "Señal principal", "Lectura"])}
 
-<h2>2.2 Fuga de datos — por qué se excluyeron ciertas columnas</h2>
-<div class="warn">
-<code>PUNT_GLOBAL</code> es un promedio de 5 módulos: Lectura Crítica, Razonamiento Cuantitativo,
-Comunicación Escrita, Competencias Ciudadanas e Inglés. Incluir esos módulos (o sus percentiles/niveles
-de desempeño) como <i>features</i> sería hacer trampa: el modelo "predeciría" con partes de la misma
-respuesta. Lo mismo aplica a los 3 módulos específicos de Medicina (Atención en Salud, Fundamentación
-en Diagnóstico y Tratamiento, Promoción de la Salud) — no entran en la fórmula del global, pero miden
-la misma habilidad del mismo estudiante en el mismo examen.
-</div>
-<p>Esto se confirmó con números, no solo por lógica: al correr Mutual Information sobre las 78 columnas
-originales (sección 3.2), estas columnas de fuga aparecen con los valores más altos por un margen enorme
-(hasta 3.26, cuando la primera variable legítima da 0.25).</p>
+<h1>1. Datos, variables y metodología</h1>
+<p>La fuente es el archivo ICFES Saber Pro de Medicina, con 43.563 registros originales. Se analizaron 23.134 estudiantes con las tres especialidades y puntaje completo. El objetivo es <code>PUNT_GLOBAL</code>, tratado como regresión. La edad se deriva de la fecha de nacimiento; se imputan numéricas con mediana y categóricas con moda.</p>
+<h2>Grupos de variables</h2>
+<ul><li><b>Institución/geografía:</b> nombre, origen, carácter académico, departamento y municipio.</li><li><b>Socioeconomía:</b> estrato, educación de madre/padre, baño e indicadores de bienes.</li><li><b>Estudiante:</b> edad, género, semestre, horas de trabajo y pago de matrícula.</li><li><b>Contexto:</b> período e índice INSE.</li></ul>
+<p>MI usa codificación ordinal y `mutual_info_regression`; los árboles usan one-hot. La evaluación de árbol y bosque utiliza <code>train_test_split(test_size=0.2, random_state=0)</code>. SHAP se calcula con TreeExplainer sobre una muestra de hasta 2.000 estudiantes del test.</p>
+<h2>Fuga de información y exclusiones</h2>
+<div class="warn"><b>No se usan variables de resultado.</b> Se excluyen los componentes, percentiles y niveles de desempeño del examen, además de los tres módulos específicos de Medicina. Son resultados del mismo examen o derivados de <code>PUNT_GLOBAL</code> y producirían fuga.</div>
+<p>La comprobación sobre las 78 columnas originales coloca <code>PERCENTIL_GLOBAL</code> en MI=3.2623 y los módulos generales aproximadamente entre 0.23 y 0.51; la primera variable legítima es la institución (MI=0.2508). También se eliminaron IDs, columnas constantes/casi vacías y redundancias.</p>
 
-<h2>2.3 Dataset final para modelado</h2>
-<p>~24 columnas quedaron tras excluir fuga de datos, columnas &gt;80% nulas, columnas sin varianza (un
-solo valor único) y columnas redundantes (IDs, duplicados geográficos, mismo dato en código vs nombre):</p>
-<table>
-<tr><th>Grupo</th><th>Columnas</th></tr>
-<tr><td>Numéricas</td><td>ESTU_INSE_INDIVIDUAL, EDAD (derivada de fecha de nacimiento)</td></tr>
-<tr><td>Institución / geografía</td><td>INST_NOMBRE_INSTITUCION, INST_CARACTER_ACADEMICO, INST_ORIGEN,
-ESTU_INST_DEPARTAMENTO, ESTU_INST_MUNICIPIO</td></tr>
-<tr><td>Socioeconómicas familia</td><td>FAMI_ESTRATOVIVIENDA, FAMI_EDUCACIONMADRE, FAMI_EDUCACIONPADRE,
-FAMI_CUANTOSCOMPARTEBAÑO, FAMI_TIENE* (auto, computador, consola, horno/microondas, internet, lavadora,
-motocicleta, TV)</td></tr>
-<tr><td>Estudiante</td><td>ESTU_GENERO, ESTU_SEMESTRECURSA, ESTU_HORASSEMANATRABAJA,
-ESTU_PAGOMATRICULA* (beca, crédito, padres, propio)</td></tr>
-<tr><td>Contexto</td><td>PERIODO</td></tr>
-</table>
+<div class="page-break"></div><h1>2. Rankings completos</h1>
+<h2>2.1 Mutual Information — variables finales</h2>
+<p>MI mide reducción de incertidumbre en nats. No es porcentaje de varianza explicada ni prueba causal. El CSV fuente contiene el ranking completo.</p>{mi_html}
+<h2>2.2 Validación de fuga — 20 mayores MI de las 78 columnas</h2>{leak_html}
 
-<div class="page-break"></div>
-<h1>3. Mutual Information</h1>
-<h2>3.1 ¿Cómo funciona?</h2>
-<p>Mutual Information (MI) mide cuánta incertidumbre sobre el target se reduce al conocer el valor de
-una variable, sin asumir que la relación es lineal — a diferencia de la correlación de Pearson, que solo
-detecta relaciones en forma de línea recta. Se mide en <i>nats</i> (logaritmo natural), sin techo fijo;
-se interpreta de forma relativa, no como un porcentaje: una variable con MI=0.25 aporta ~10 veces más
-información que una con MI=0.025. Valores por debajo de ~0.01 se tratan como ruido estadístico, no como
-señal real.</p>
+<div class="page-break"></div><h1>3. Árbol de decisión</h1>
+<p>El modelo interpretado es un árbol podado (<code>max_depth=4</code>, <code>min_samples_leaf=50</code>): R²=0.2877, MAE=15.84 y RMSE=20.86. El árbol sin podar alcanza R²=-0.2373 por sobreajuste y tiene 17.443 hojas.</p>
+<p>La importancia suma la reducción de varianza de los cortes one-hot; no equivale a un efecto individual.</p>{tree_html}
 
-<h2>3.2 Ranking sobre las 24 columnas finales</h2>
-<table>
-<tr><th>Variable</th><th>Mutual Information</th></tr>
-<tr><td>INST_NOMBRE_INSTITUCION</td><td>0.2549</td></tr>
-<tr><td>INST_ORIGEN</td><td>0.0594</td></tr>
-<tr><td>ESTU_INST_MUNICIPIO</td><td>0.0581</td></tr>
-<tr><td>ESTU_INST_DEPARTAMENTO</td><td>0.0516</td></tr>
-<tr><td>FAMI_ESTRATOVIVIENDA</td><td>0.0392</td></tr>
-<tr><td>INST_CARACTER_ACADEMICO</td><td>0.0300</td></tr>
-<tr><td>EDAD</td><td>0.0246</td></tr>
-<tr><td>FAMI_EDUCACIONPADRE</td><td>0.0239</td></tr>
-<tr><td>FAMI_EDUCACIONMADRE</td><td>0.0230</td></tr>
-<tr><td>ESTU_PAGOMATRICULACREDITO</td><td>0.0226</td></tr>
-<tr><td>ESTU_INSE_INDIVIDUAL</td><td>0.0225</td></tr>
-<tr><td>ESTU_HORASSEMANATRABAJA</td><td>0.0210</td></tr>
-<tr><td>(resto de variables)</td><td>&lt; 0.02, la mayoría &lt; 0.01 (ruido)</td></tr>
-</table>
+<div class="page-break"></div><h1>4. Random Forest y SHAP</h1>
+<p>El bosque promedia 300 árboles (<code>max_depth=8</code>, <code>min_samples_leaf=20</code>), reduciendo la varianza del árbol individual. Resultados del split: R²=0.37, MAE=14.77. El ranking completo de importancia clásica es:</p>{rf_html}
+<h2>SHAP: impacto en puntos</h2>
+<p>SHAP explica la predicción del bosque en unidades de <code>PUNT_GLOBAL</code>. Los valores son magnitudes absolutas promedio: no indican dirección por sí solos. Por ejemplo, 8.35 puntos para origen institucional no significa que cada caso cambie exactamente esa cantidad.</p>{shap_html}
+{('<img src="' + shap_plot + '"><p class="caption">SHAP summary plot: distribución de impactos por estudiante.</p>') if shap_plot else ''}
 
-<h2>3.3 Validación con las 78 columnas originales (incluye fuga)</h2>
-<p>Se corrió el mismo análisis sin excluir nada (salvo el ID de estudiante, que rompe el estimador al
-tener 1 fila por categoría). Esto confirma numéricamente el criterio de exclusión de la sección 2.2:</p>
-<table>
-<tr><th>Variable</th><th>Mutual Information</th><th>Motivo</th></tr>
-<tr><td>PERCENTIL_GLOBAL</td><td>3.2623</td><td>Derivado directo de PUNT_GLOBAL — fuga</td></tr>
-<tr><td>MOD_LECTURA_CRITICA_PUNT</td><td>0.5130</td><td>Componente de PUNT_GLOBAL — fuga</td></tr>
-<tr><td>MOD_COMPETEN_CIUDADA_PNAL</td><td>0.4834</td><td>Derivado de componente — fuga</td></tr>
-<tr><td>MOD_INGLES_PUNT</td><td>0.4550</td><td>Componente de PUNT_GLOBAL — fuga</td></tr>
-<tr><td>MOD_RAZONA_CUANTITAT_PUNT</td><td>0.4042</td><td>Componente de PUNT_GLOBAL — fuga</td></tr>
-<tr><td><b>INST_NOMBRE_INSTITUCION</b></td><td><b>0.2508</b></td><td><b>Primera variable legítima (sin fuga)</b></td></tr>
-</table>
-<p>Las columnas descartadas por &gt;80% de nulos o por tener un solo valor único (ESTU_ESTUDIANTE,
-ESTU_METODO_PRGM, etc.) cayeron todas por debajo de 0.0004 — confirmando que no aportaban señal real.</p>
+<div class="page-break"></div><h1>5. Síntesis y lectura sustantiva</h1>
+<h2>Patrón común</h2><p>Los cuatro métodos cuantitativos coinciden en la centralidad de la institución. Sin embargo, esa aparente equivalencia entre nombre, origen y carácter académico no sobrevive a una medición más robusta de generalización — ver sección 6.4 (etapa 7): el nombre puntual resulta ser memorización, mientras que origen y carácter académico (tipo de institución) son la señal institucional que realmente se transfiere a instituciones nuevas. La edad aparece de manera estable en árbol, bosque y SHAP; estrato, INSE y educación familiar tienen una asociación menor; género, período y la mayoría de bienes del hogar tienen señal baja. PCA/UMAP forman aproximadamente 55 agrupaciones institucionales y confirman visualmente el patrón, pero no descubren una variable nueva.</p>
+<h2>Qué no debe concluirse</h2><ul><li>No puede afirmarse que cambiar de institución cause un cambio concreto de puntaje.</li><li>Una importancia alta puede reflejar confusión entre selección, ubicación, recursos y composición del alumnado.</li><li>Las importancias no son coeficientes ni significancia estadística.</li><li>No puede sostenerse que el nombre puntual de una institución (<code>INST_NOMBRE_INSTITUCION</code>) tenga poder predictivo transferible a instituciones nuevas: bajo permutation importance agrupada (sección 6.4) cae del puesto #1 en MDI al #24 de 27, con caída de R² prácticamente nula.</li></ul>
+<h2>Limitaciones</h2><ul><li>Asociación no implica causalidad.</li><li>El nombre de institución es categórico y de alta cardinalidad. <i>Abordado empíricamente</i> en la sección 6: al remover la institución (etapa 5, CV k=5) el R² cae de 0.374 a 0.186±0.011.</li><li>Un solo split limita la incertidumbre de las métricas y rankings. <i>Abordado empíricamente</i> en la sección 6: K-Fold (etapa 5) y GroupKFold por institución (etapa 6) muestran que el R²=0.374 del split único cae a 0.120±0.146 al validar contra instituciones nunca vistas.</li><li>El nombre de institución no es señal transferible. <i>Abordado empíricamente</i> en la sección 6.4 (etapa 7): la permutation importance agrupada muestra que el nombre cae del puesto #1 (MDI=0.2952) al #24 de 27 con caída de R² ≈0, mientras que origen y carácter académico institucional se mantienen —y suben— como las variables más importantes.</li><li>Faltan preparación, horas de estudio, salud y trayectoria escolar.</li><li>PCA/UMAP dependen de one-hot y de parámetros de visualización.</li></ul>
 
-<div class="page-break"></div>
-<h1>4. Árbol de Decisión</h1>
-<h2>4.1 ¿Cómo funciona?</h2>
-<p>Un árbol de decisión de regresión predice el target dividiendo los datos en grupos cada vez más chicos
-mediante preguntas binarias sobre las features. En cada nodo prueba todos los posibles cortes de todas las
-variables y elige el que más reduce la varianza del <code>PUNT_GLOBAL</code> dentro de cada grupo resultante.
-La predicción final es el promedio de <code>PUNT_GLOBAL</code> de los estudiantes de entrenamiento que
-cayeron en esa misma hoja.</p>
-<p>El riesgo central es el <b>overfitting</b>: sin limitar la profundidad, el árbol sigue cortando hasta
-casi memorizar cada fila individual. Por eso se compararon dos versiones:</p>
+<div class="page-break"></div><h1>6. Validación de robustez: institución sin variable propia y generalización a instituciones nuevas</h1>
+<p>Las dos limitaciones anteriores —codificación institucional y un único split— se atacaron empíricamente reentrenando el mismo Random Forest de referencia (<code>n_estimators=300, max_depth=8, min_samples_leaf=20</code>) bajo dos esquemas adicionales.</p>
+<h2>6.1 Etapa 5 — sin variables de institución, con K-Fold (k=5)</h2>
+<p>Se removieron <code>INST_NOMBRE_INSTITUCION</code>, <code>INST_CARACTER_ACADEMICO</code>, <code>INST_ORIGEN</code>, <code>ESTU_INST_DEPARTAMENTO</code> y <code>ESTU_INST_MUNICIPIO</code>, evaluando con K-Fold (k=5, shuffle, <code>random_state=0</code>): R²=0.186±0.011, MAE=17.21±0.18, RMSE=22.30±0.23. Quitar institución reduce el R² de ~0.37 a ~0.19: se pierde más de la mitad del poder explicativo del modelo. Las variables más importantes pasan a ser socioeconómicas y demográficas (edad, horas de trabajo, INSE individual, forma de pago de matrícula, estrato, educación de los padres), con importancias estables entre folds (coeficiente de variación ~7-10% en el top de la lista).</p>{cv_importance_html}
+<h2>6.2 Etapa 6 — con institución, GroupKFold por institución (k=5)</h2>
+<p>Se entrenó el mismo modelo con el set completo de variables (incluida institución), usando <code>GroupKFold(n_splits=5)</code> agrupado por <code>INST_NOMBRE_INSTITUCION</code>, de modo que las instituciones de validación de cada fold nunca aparecen en su entrenamiento (55 instituciones únicas, ninguna supera ~7% de las filas): R²=0.120±0.146, MAE=17.59±1.07, RMSE=22.78±1.53. El R² por fold (0.159, 0.013, 0.250, 0.252, -0.074) tiene una dispersión muy alta, con un fold negativo. Las variables ligadas a una institución puntual (p. ej. Universidad de los Andes: std/media ≈73%; Universidad Icesi: ≈56%) son muy inestables entre folds, mientras que <code>EDAD</code> (≈4%), <code>ESTU_INSE_INDIVIDUAL</code> (≈15%) y <code>INST_CARACTER_ACADEMICO_*</code> (≈21%) se mantienen más estables.</p>{groupkfold_importance_html}
+<h2>6.3 Comparación de R² entre esquemas de validación</h2>{r2_comparison_html}
+<p>El R² de etapa 6 (0.12±0.15) no solo es muy inferior al de etapa 3 (0.374): también queda por debajo del de etapa 5 (0.186±0.011), que ni siquiera usa variables de institución. Esto es evidencia de que el modelo de etapa 3 memorizaba patrones específicos de las instituciones vistas en entrenamiento, en lugar de aprender una relación generalizable entre las variables socioeconómicas/académicas y <code>PUNT_GLOBAL</code>. Esto matiza —no invalida— el hallazgo central: la institución sigue siendo la señal dominante, pero parte del R²=0.37 original reflejaba el diseño de validación (split único, sin agrupar por institución) más que capacidad predictiva genuina sobre instituciones nuevas. La sección 6.4 (etapa 7) precisa este punto a nivel de variable individual.</p>
+<h2>6.4 Etapa 7 — Permutation importance agrupada vs. MDI/Gini: nombre vs. tipo de institución</h2>
+<p>La importancia MDI/Gini (etapas 3 y 6) sobreestima variables categóricas de alta cardinalidad, porque el algoritmo de construcción de árboles tiene más oportunidades de encontrar un split que reduzca impureza cuantas más categorías tenga la variable, aunque ese split no generalice fuera de muestra. <code>INST_NOMBRE_INSTITUCION</code> se expande a 55 columnas dummy, la de mayor cardinalidad del feature set con margen. Para probarlo, se replicó el mismo <code>GroupKFold(n_splits=5)</code> de etapa 6 y se calculó, por variable original (agregando sus columnas dummy), tanto la MDI agregada como la <b>permutation importance agrupada</b>: en cada fold de validación se permutan a la vez todas las dummies de una variable y se mide la caída de R² respecto al modelo sin permutar (<code>n_repeats=5</code>). A diferencia de MDI, la permutación se mide en validación, con instituciones nunca vistas en entrenamiento.</p>
+{permutation_vs_mdi_html}
+<p>El resultado es contundente: <code>INST_NOMBRE_INSTITUCION</code> —la variable "más importante" según MDI (0.2952, puesto #1)— cae al puesto #24 de 27 en permutation importance, con caída de R² prácticamente cero (ruido numérico): romper la identidad de la institución en validación no cambia el poder predictivo del modelo, porque la importancia MDI se generaba sobre splits de instituciones de <i>entrenamiento</i> que <code>GroupKFold</code> nunca comparte con las de validación. <code>ESTU_INST_MUNICIPIO</code> y <code>ESTU_INST_DEPARTAMENTO</code> (proxies geográficos de institución) colapsan igual, con importancia por permutación <b>negativa</b> (ranks #26-27). En cambio, <code>INST_ORIGEN</code> e <code>INST_CARACTER_ACADEMICO</code> —de baja cardinalidad, compartidas entre instituciones de entrenamiento y validación— <b>suben</b> de ranking (#2→#1 y #3→#2) y quedan como las dos variables más importantes bajo este método más robusto; <code>EDAD</code> y <code>ESTU_INSE_INDIVIDUAL</code> se mantienen estables en el top. La conclusión no es "institución no importa": es que el <b>tipo/origen de institución es señal real y generalizable</b>, mientras que la <b>identidad puntual de la institución es un artefacto de memorización que MDI infla por su alta cardinalidad</b>.</p>
 
-<table>
-<tr><th>Modelo</th><th>R²</th><th>MAE</th><th>RMSE</th><th>Detalle</th></tr>
-<tr><td>Sin podar</td><td>-0.2373</td><td>21.08</td><td>27.50</td><td>17.443 hojas — memoriza el set de
-entrenamiento, predice peor que la media</td></tr>
-<tr><td>Podado (max_depth=4, min_samples_leaf=50)</td><td>0.2877</td><td>15.84</td><td>20.86</td>
-<td>Generaliza, interpretable</td></tr>
-</table>
+<div class="page-break"></div><h1>7. Reproducibilidad y referencias</h1>
+<p>Para regenerar el informe desde la raíz:</p><p><code>python docs/conclusiones/generar_pdf.py</code></p>
+<p>El generador lee automáticamente estos artefactos:</p><ul><li><code>docs/etapa_1_mutual_information/mutual_info_ranking_24.csv</code> y <code>mutual_info_ranking_78.csv</code></li><li><code>docs/etapa_2_decision_tree/feature_importance.csv</code> y <code>tree_rules.txt</code></li><li><code>docs/etapa_3_random_forest_shap/rf_feature_importance.csv</code>, <code>shap_ranking.csv</code> y <code>shap_summary_plot.png</code></li><li><code>docs/etapa_4_pca_umap/</code> para visualizaciones exploratorias</li><li><code>docs/etapa_5_sin_institucion_cv/random_forest_sin_institucion_cv.py</code>, <code>metrics_cv.csv</code> y <code>feature_importance_cv.csv</code></li><li><code>docs/etapa_6_groupkfold_institucion/random_forest_groupkfold_institucion.py</code>, <code>metrics_groupkfold.csv</code> y <code>feature_importance_groupkfold.csv</code></li><li><code>docs/etapa_7_permutation_importance/random_forest_permutation_importance.py</code> y <code>permutation_vs_mdi_importance.csv</code></li><li>Scripts fuente <code>*_analysis.py</code> y sus README en cada carpeta</li></ul>
+<p>Los análisis se ejecutan con sus scripts documentados desde la raíz y leen <code>ESTU_MEDICINA_3_MODULOS.xlsx</code>. Este informe no modifica datos ni lógica de modelos; presenta los resultados ya calculados.</p>
+<div class="box"><b>Conclusión:</b> dentro de las variables observadas, las características institucionales son las más asociadas con <code>PUNT_GLOBAL</code>, pero su poder predictivo aparente (R²=0.37) estaba parcialmente inflado por compartir instituciones entre entrenamiento y prueba: bajo <code>GroupKFold</code> por institución el R² cae a 0.12±0.15. La permutation importance agrupada (sección 6.4) precisa además que esa señal institucional no es homogénea: el tipo de institución (<code>INST_ORIGEN</code>, <code>INST_CARACTER_ACADEMICO</code>) es señal real y generalizable, mientras que el nombre puntual de la institución es en gran parte memorización sin poder predictivo transferible a instituciones nuevas. La magnitud y estabilidad causal de esa asociación requiere análisis temporal y diseños que controlen los mecanismos de selección.</div>
+</body></html>"""
 
-<h2>4.2 Feature importance (árbol podado)</h2>
-<table>
-<tr><th>Variable</th><th>Importancia</th></tr>
-<tr><td>INST_ORIGEN = NO OFICIAL - CORPORACIÓN</td><td>0.3223</td></tr>
-<tr><td>INST_CARACTER_ACADEMICO = INSTITUCIÓN UNIVERSITARIA</td><td>0.2409</td></tr>
-<tr><td>INST_NOMBRE_INSTITUCION = Universidad de los Andes</td><td>0.1685</td></tr>
-<tr><td>EDAD</td><td>0.0918</td></tr>
-<tr><td>INST_NOMBRE_INSTITUCION = Universidad Icesi</td><td>0.0836</td></tr>
-<tr><td>ESTU_INSE_INDIVIDUAL</td><td>0.0131</td></tr>
-</table>
-<p>Con solo 4 niveles de profundidad, el árbol prioriza institución antes de llegar a variables como
-estrato o tenencia de bienes — que casi no entran al árbol.</p>
-
-<div class="page-break"></div>
-<h1>5. Random Forest + SHAP</h1>
-<h2>5.1 ¿Cómo funciona Random Forest?</h2>
-<p>Entrena muchos árboles distintos (acá 300) y promedia sus predicciones. La diversidad entre árboles
-viene de dos trucos: <b>bagging</b> (cada árbol ve una muestra aleatoria de filas) y <b>feature bagging</b>
-(en cada corte, solo puede elegir entre un subconjunto aleatorio de columnas). Al promediar cientos de
-árboles que se equivocan en direcciones distintas, los errores se cancelan parcialmente y el promedio
-generaliza mejor que un árbol único.</p>
-
-<h2>5.2 ¿Cómo funciona SHAP?</h2>
-<p>SHAP (SHapley Additive exPlanations) no dice qué variable es importante en general — dice cuánto
-empujó cada variable la predicción de <i>un estudiante en particular</i>, arriba o abajo del promedio.
-Viene de teoría de juegos: reparte el crédito de la predicción entre cada variable probando qué pasaría
-si esa variable no estuviera, en combinación con las demás. La ventaja clave frente a
-<code>feature_importances_</code>: el valor de SHAP está en las <b>mismas unidades que el target</b>
-(puntos de <code>PUNT_GLOBAL</code>), no es un número abstracto.</p>
-
-<h2>5.3 Resultados</h2>
-<table>
-<tr><th>Modelo</th><th>R²</th><th>MAE</th></tr>
-<tr><td>Árbol sin podar</td><td>-0.24</td><td>21.08</td></tr>
-<tr><td>Árbol podado (depth=4)</td><td>0.29</td><td>15.84</td></tr>
-<tr><td><b>Random Forest (300 árboles)</b></td><td><b>0.37</b></td><td><b>14.77</b></td></tr>
-</table>
-<p>Mejora real sobre el árbol único, pero sigue sin ser un modelo fuerte: R²=0.37 significa que ~63% de
-la varianza del puntaje sigue sin explicarse con estas variables.</p>
-
-<h2>5.4 Ranking SHAP (impacto en puntos)</h2>
-<table>
-<tr><th>Variable</th><th>Impacto promedio absoluto (puntos)</th></tr>
-<tr><td>INST_ORIGEN = NO OFICIAL - CORPORACIÓN</td><td>8.35</td></tr>
-<tr><td>EDAD</td><td>2.76</td></tr>
-<tr><td>INST_CARACTER_ACADEMICO = INSTITUCIÓN UNIVERSITARIA</td><td>2.32</td></tr>
-<tr><td>INST_CARACTER_ACADEMICO = UNIVERSIDAD</td><td>2.19</td></tr>
-<tr><td>INST_NOMBRE_INSTITUCION = Universidad de los Andes</td><td>1.27</td></tr>
-<tr><td>ESTU_INSE_INDIVIDUAL</td><td>1.22</td></tr>
-</table>
-
-<div class="page-break"></div>
-<img src="{shap_plot}">
-<p class="figcaption">Fig. 1 — SHAP summary plot: cada punto es un estudiante; el color indica si el
-valor de la variable era alto (rojo) o bajo (azul); la posición horizontal indica el impacto en la
-predicción, en puntos de PUNT_GLOBAL.</p>
-
-<div class="page-break"></div>
-<h1>6. PCA + UMAP</h1>
-<h2>6.1 ¿Cómo funcionan?</h2>
-<p><b>PCA</b> busca nuevos ejes (combinaciones lineales de las columnas originales) ordenados de mayor a
-menor varianza explicada — es una técnica lineal, solo encuentra combinaciones tipo <code>a·col1 +
-b·col2 + ...</code>. <b>UMAP</b> construye un grafo de vecinos más cercanos en el espacio original y
-busca una proyección en 2D que preserve esa vecindad — no es lineal, puede capturar clusters con formas
-arbitrarias.</p>
-
-<h2>6.2 Por qué son limitados en este dataset</h2>
-<p>Ambas técnicas trabajan sobre distancias/varianza en espacio numérico. Este dataset tiene solo 2
-columnas realmente numéricas (INSE, edad); el resto son ~140 columnas binarias tras one-hot encoding.
-Eso genera dos síntomas visibles:</p>
-<ul>
-<li><b>PCA</b>: PC1 explica solo <b>4.3%</b> de la varianza, hacen falta 10 componentes para llegar a
-<b>22.2%</b> acumulado.</li>
-<li><b>UMAP</b>: se forman ~55 clusters bien separados, uno por institución — la distancia euclidiana en
-one-hot está dominada por "¿es la misma universidad?".</li>
-</ul>
-
-<img src="{pca_scatter}">
-<p class="figcaption">Fig. 2 — PCA coloreado por PUNT_GLOBAL. El patrón de "rayas" es un artefacto típico
-de aplicar PCA sobre variables binarias (one-hot); no hay gradiente de color limpio.</p>
-
-<div class="page-break"></div>
-<img src="{umap_puntaje}">
-<p class="figcaption">Fig. 3 — UMAP coloreado por PUNT_GLOBAL. Cada nube de puntos es una institución;
-dentro de cada una el color es bastante uniforme, pero no hay una estructura global continua.</p>
-
-<img src="{umap_caracter}">
-<p class="figcaption">Fig. 4 — UMAP coloreado por carácter académico. Confirma que cada cluster
-(institución) corresponde casi siempre a un solo carácter académico — no es un hallazgo nuevo, es la
-misma señal de Mutual Information/SHAP vista de forma visual.</p>
-
-<h2>6.3 Conclusión de esta sección</h2>
-<p>PCA/UMAP sirven para confirmar visualmente que la institución es el eje dominante, pero no aportan
-variables nuevas — el dataset es mayormente categórico, con muy pocas variables continuas, así que las
-técnicas basadas en distancia/varianza tienen poco con qué trabajar.</p>
-
-<div class="page-break"></div>
-<h1>7. Conclusión Final</h1>
-
-<h2>7.1 Qué SÍ explica el puntaje (en orden)</h2>
-<ol>
-<li><b>Institución</b> (nombre, origen, carácter académico) — selectividad de admisión, calidad docente
-y nivel del grupo de estudiantes quedan empaquetados acá. Es, sin comparación, el factor dominante en
-las 5 técnicas.</li>
-<li><b>Edad</b> — señal moderada y consistente en árbol, Random Forest y SHAP.</li>
-<li><b>Nivel socioeconómico del hogar</b> — estrato, INSE individual, educación de padre y madre. Señal
-real pero bastante menor que institución.</li>
-<li><b>Cómo pagó la matrícula</b> (crédito, beca, propio, padres) — señal débil pero presente.</li>
-</ol>
-
-<h2>7.2 Qué NO explica el puntaje</h2>
-<p>Género, posesión individual de bienes (auto, lavadora, TV, consola, internet, microondas) — señal
-casi nula de forma individual. El estrato agregado captura mejor ese efecto que cada bien por separado.
-Tampoco aportan: nacionalidad, país de residencia, tipo de documento, período de presentación.</p>
-
-<h2>7.3 Limitaciones importantes</h2>
-<div class="warn">
-<ul>
-<li><b>El modelo explica poco en términos absolutos</b>: el mejor modelo (Random Forest) llega a
-R²=0.37 — deja 63% de la varianza sin explicar. Factores como preparación individual, salud del
-estudiante el día del examen, o cuánto estudió, no están en este dataset y probablemente pesan más
-que cualquier variable disponible.</li>
-<li><b>PCA/UMAP aportaron poco</b> por la naturaleza mayormente categórica del dataset.</li>
-<li><b>Fuga de datos evitada correctamente</b> y confirmada con números (sección 3.3).</li>
-</ul>
-</div>
-
-<h2>7.4 Recomendación para seguir</h2>
-<p>Si el objetivo es mejorar el poder predictivo (subir el R²=0.37):</p>
-<ul>
-<li>Probar Gradient Boosting (CatBoost/LightGBM/XGBoost) con soporte nativo de categóricas de alta
-cardinalidad — evita el one-hot de 55 columnas de institución.</li>
-<li>Validación cruzada (k-fold) en vez de un solo split 80/20, para una estimación más confiable del R².</li>
-<li>Si el objetivo es equidad educativa más que predicción pura, el hallazgo ya es suficientemente
-claro: el estrato/institución explican más el resultado que el esfuerzo o mérito individual medible
-en este dataset.</li>
-</ul>
-
-</body>
-</html>
-"""
-
-out_path = DOCS / "conclusiones" / "Analisis_Completo_Saber_Pro_Medicina.pdf"
-HTML(string=html, base_url=str(ROOT)).write_pdf(str(out_path))
-print(f"PDF generado: {out_path}")
+for filename in ("Analisis_Completo_Saber_Pro_Medicina.pdf", "Analisis_Variables_Puntaje_Global.pdf"):
+    destination = OUT / filename
+    if HTML is not None:
+        HTML(string=html_doc, base_url=str(ROOT)).write_pdf(str(destination))
+    else:
+        # Fallback para macOS: Chrome renderiza el HTML sin requerir las
+        # bibliotecas nativas que WeasyPrint necesita.
+        chrome = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+        if not chrome.exists():
+            raise RuntimeError(
+                "WeasyPrint no está disponible y no se encontró Google Chrome para generar el PDF"
+            )
+        html_path = OUT / ".informe_temporal.html"
+        html_path.write_text(html_doc, encoding="utf-8")
+        try:
+            subprocess.run(
+                [
+                    str(chrome), "--headless", "--no-sandbox", "--disable-gpu",
+                    f"--print-to-pdf={destination}", f"file://{html_path}",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        finally:
+            html_path.unlink(missing_ok=True)
+    print(f"PDF generado: {destination}")
