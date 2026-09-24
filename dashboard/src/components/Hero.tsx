@@ -3,9 +3,7 @@ export default function Hero() {
     <div className="hero">
       <div className="page">
         <div className="eyebrow">Saber Pro · Medicina · 23.134 estudiantes · períodos 2019–2024</div>
-        <h1>
-          El puntaje no lo explica la universidad. Lo explica qué <em>tipo</em> de universidad es.
-        </h1>
+        <h1>Variables que afectan el Saber Pro</h1>
         <p className="sub">
           Nueve etapas de análisis sobre qué variables se asocian con <span className="num">PUNT_GLOBAL</span> — y
           por qué el hallazgo más obvio (&ldquo;la institución domina&rdquo;) resultó estar mal medido. Esto

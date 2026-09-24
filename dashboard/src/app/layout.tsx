@@ -22,7 +22,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Radiografía del Puntaje Global",
+  title: "Variables que afectan el Saber Pro",
   description:
     "Nueve etapas de análisis sobre qué variables se asocian con PUNT_GLOBAL en Saber Pro Medicina, y por qué el hallazgo más obvio resultó estar mal medido.",
 };
