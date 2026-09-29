@@ -1,0 +1,222 @@
+[
+  {
+    "inst_cod_institucion":1714,
+    "inst_nombre_institucion":"COLEGIO MAYOR DE NUESTRA SEÑORA DEL ROSARIO-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":2840,
+    "inst_nombre_institucion":"CORPORACION UNIVERSITARIA EMPRESARIAL ALEXANDER VON HUMBOLDT - C.U.E.-ARMENIA"
+  },
+  {
+    "inst_cod_institucion":2825,
+    "inst_nombre_institucion":"CORPORACION UNIVERSITARIA RAFAEL NUÑEZ-CARTAGENA"
+  },
+  {
+    "inst_cod_institucion":2833,
+    "inst_nombre_institucion":"CORPORACION UNIVERSITARIA REMINGTON-MEDELLIN"
+  },
+  {
+    "inst_cod_institucion":2702,
+    "inst_nombre_institucion":"FUNDACION UNIVERSITARIA DE CIENCIAS DE LA SALUD-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":2728,
+    "inst_nombre_institucion":"FUNDACION UNIVERSITARIA DEL AREA ANDINA-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":2707,
+    "inst_nombre_institucion":"FUNDACION UNIVERSITARIA JUAN N. CORPAS-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":9907,
+    "inst_nombre_institucion":"FUNDACION UNIVERSITARIA NAVARRA - UNINAVARRA-NEIVA"
+  },
+  {
+    "inst_cod_institucion":2709,
+    "inst_nombre_institucion":"FUNDACION UNIVERSITARIA SAN MARTIN-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":2746,
+    "inst_nombre_institucion":"FUNDACION UNIVERSITARIA SANITAS-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":2747,
+    "inst_nombre_institucion":"INSTITUCIÓN UNIVERSITARIA VISIÓN DE LAS AMÉRICAS-MEDELLIN"
+  },
+  {
+    "inst_cod_institucion":1701,
+    "inst_nombre_institucion":"PONTIFICIA UNIVERSIDAD JAVERIANA-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1702,
+    "inst_nombre_institucion":"PONTIFICIA UNIVERSIDAD JAVERIANA-CALI"
+  },
+  {
+    "inst_cod_institucion":2301,
+    "inst_nombre_institucion":"UNIDAD CENTRAL DEL VALLE DEL CAUCA-TULUA"
+  },
+  {
+    "inst_cod_institucion":1826,
+    "inst_nombre_institucion":"UNIVERSIDAD ANTONIO NARIÑO-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1823,
+    "inst_nombre_institucion":"UNIVERSIDAD AUTONOMA DE BUCARAMANGA-UNAB-BUCARAMANGA"
+  },
+  {
+    "inst_cod_institucion":2708,
+    "inst_nombre_institucion":"UNIVERSIDAD CES-MEDELLIN"
+  },
+  {
+    "inst_cod_institucion":1818,
+    "inst_nombre_institucion":"UNIVERSIDAD COOPERATIVA DE COLOMBIA-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1816,
+    "inst_nombre_institucion":"UNIVERSIDAD COOPERATIVA DE COLOMBIA-MEDELLIN"
+  },
+  {
+    "inst_cod_institucion":1820,
+    "inst_nombre_institucion":"UNIVERSIDAD COOPERATIVA DE COLOMBIA-SANTA MARTA"
+  },
+  {
+    "inst_cod_institucion":1201,
+    "inst_nombre_institucion":"UNIVERSIDAD DE ANTIOQUIA-MEDELLIN"
+  },
+  {
+    "inst_cod_institucion":1734,
+    "inst_nombre_institucion":"UNIVERSIDAD DE BOYACA - UNIBOYACA-TUNJA"
+  },
+  {
+    "inst_cod_institucion":1112,
+    "inst_nombre_institucion":"UNIVERSIDAD DE CALDAS-MANIZALES"
+  },
+  {
+    "inst_cod_institucion":1205,
+    "inst_nombre_institucion":"UNIVERSIDAD DE CARTAGENA-CARTAGENA"
+  },
+  {
+    "inst_cod_institucion":1835,
+    "inst_nombre_institucion":"UNIVERSIDAD DE CIENCIAS APLICADAS Y AMBIENTALES UDCA.-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1711,
+    "inst_nombre_institucion":"UNIVERSIDAD DE LA SABANA-CHIA"
+  },
+  {
+    "inst_cod_institucion":1813,
+    "inst_nombre_institucion":"UNIVERSIDAD DE LOS ANDES-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1722,
+    "inst_nombre_institucion":"UNIVERSIDAD DE MANIZALES-MANIZALES"
+  },
+  {
+    "inst_cod_institucion":1206,
+    "inst_nombre_institucion":"UNIVERSIDAD DE NARIÑO-PASTO"
+  },
+  {
+    "inst_cod_institucion":1212,
+    "inst_nombre_institucion":"UNIVERSIDAD DE PAMPLONA-PAMPLONA"
+  },
+  {
+    "inst_cod_institucion":2832,
+    "inst_nombre_institucion":"UNIVERSIDAD DE SANTANDER - UDES-BUCARAMANGA"
+  },
+  {
+    "inst_cod_institucion":1217,
+    "inst_nombre_institucion":"UNIVERSIDAD DE SUCRE-SINCELEJO"
+  },
+  {
+    "inst_cod_institucion":1110,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL CAUCA-POPAYAN"
+  },
+  {
+    "inst_cod_institucion":1213,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL MAGDALENA - UNIMAGDALENA-SANTA MARTA"
+  },
+  {
+    "inst_cod_institucion":1713,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL NORTE-BARRANQUILLA"
+  },
+  {
+    "inst_cod_institucion":1208,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL QUINDIO-ARMENIA"
+  },
+  {
+    "inst_cod_institucion":1834,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL SINÚ 'Elías Bechara Zainúm' - UNISINÚ-CARTAGENA"
+  },
+  {
+    "inst_cod_institucion":1833,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL SINÚ 'Elías Bechara Zainúm' - UNISINÚ-MONTERIA"
+  },
+  {
+    "inst_cod_institucion":1207,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL TOLIMA-IBAGUE"
+  },
+  {
+    "inst_cod_institucion":1203,
+    "inst_nombre_institucion":"UNIVERSIDAD DEL VALLE-CALI"
+  },
+  {
+    "inst_cod_institucion":1729,
+    "inst_nombre_institucion":"UNIVERSIDAD EL BOSQUE-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1828,
+    "inst_nombre_institucion":"UNIVERSIDAD ICESI-CALI"
+  },
+  {
+    "inst_cod_institucion":1204,
+    "inst_nombre_institucion":"UNIVERSIDAD INDUSTRIAL DE SANTANDER-BUCARAMANGA"
+  },
+  {
+    "inst_cod_institucion":1808,
+    "inst_nombre_institucion":"UNIVERSIDAD LIBRE-BARRANQUILLA"
+  },
+  {
+    "inst_cod_institucion":1807,
+    "inst_nombre_institucion":"UNIVERSIDAD LIBRE-CALI"
+  },
+  {
+    "inst_cod_institucion":1824,
+    "inst_nombre_institucion":"UNIVERSIDAD METROPOLITANA-BARRANQUILLA"
+  },
+  {
+    "inst_cod_institucion":1117,
+    "inst_nombre_institucion":"UNIVERSIDAD MILITARNUEVA GRANADA-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1101,
+    "inst_nombre_institucion":"UNIVERSIDAD NACIONAL DE COLOMBIA-BOGOTÁ D.C."
+  },
+  {
+    "inst_cod_institucion":1106,
+    "inst_nombre_institucion":"UNIVERSIDAD PEDAGOGICA Y TECNOLOGICA DE COLOMBIA-TUNJA"
+  },
+  {
+    "inst_cod_institucion":1710,
+    "inst_nombre_institucion":"UNIVERSIDAD PONTIFICIA BOLIVARIANA-MEDELLIN"
+  },
+  {
+    "inst_cod_institucion":1805,
+    "inst_nombre_institucion":"UNIVERSIDAD SANTIAGO DE CALI-CALI"
+  },
+  {
+    "inst_cod_institucion":1829,
+    "inst_nombre_institucion":"UNIVERSIDAD SANTIAGO DE CALI-PALMIRA"
+  },
+  {
+    "inst_cod_institucion":2805,
+    "inst_nombre_institucion":"UNIVERSIDAD SIMON BOLIVAR-BARRANQUILLA"
+  },
+  {
+    "inst_cod_institucion":1114,
+    "inst_nombre_institucion":"UNIVERSIDAD SURCOLOMBIANA-NEIVA"
+  },
+  {
+    "inst_cod_institucion":1111,
+    "inst_nombre_institucion":"UNIVERSIDAD TECNOLOGICA DE PEREIRA - ITP-PEREIRA"
+  }
+]

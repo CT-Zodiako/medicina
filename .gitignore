@@ -1,8 +1,17 @@
 # Local Pi runtime state
 .atl/
+.pi/
+.codegraph/
 
 # macOS
 .DS_Store
 
 # Python virtual environment
 .venv/
+__pycache__/
+*.pyc
+
+# Trained model binaries (too large for git; regenerate with
+# scripts_2021_2024/14_entrenar_modelo_final.py and
+# scripts_2021_2024/17_entrenar_modelo_referencia_institucion.py)
+modelos_2021_2024/*.joblib

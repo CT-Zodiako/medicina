@@ -1,0 +1,7 @@
+Fold 1: macro F1=0.3677, balanced accuracy=0.3734
+Fold 2: macro F1=0.3902, balanced accuracy=0.4143
+Fold 3: macro F1=0.3767, balanced accuracy=0.3866
+Fold 4: macro F1=0.3758, balanced accuracy=0.3941
+Fold 5: macro F1=0.3719, balanced accuracy=0.3891
+Pooled OOF: macro F1=0.3786 (delta -0.0001), balanced accuracy=0.3924 (delta -0.0006)
+Report written: /Users/zodiako/DEV/medicina/docs_2021_2024/12_modelo_final_sin_fuga.md

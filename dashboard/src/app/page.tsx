@@ -1,36 +1,25 @@
-import Cierre from "@/components/Cierre";
-import Etapa01 from "@/components/etapas/Etapa01";
-import Etapa02 from "@/components/etapas/Etapa02";
-import Etapa03 from "@/components/etapas/Etapa03";
-import Etapa04 from "@/components/etapas/Etapa04";
-import Etapa05 from "@/components/etapas/Etapa05";
-import Etapa06 from "@/components/etapas/Etapa06";
-import Etapa07 from "@/components/etapas/Etapa07";
-import Etapa08 from "@/components/etapas/Etapa08";
-import Etapa09 from "@/components/etapas/Etapa09";
-import Hero from "@/components/Hero";
-import TocNav from "@/components/TocNav";
+import PrediccionForm from "@/components/PrediccionForm";
+import SiteHeader from "@/components/SiteHeader";
 
 export default function Home() {
   return (
     <>
-      <Hero />
+      <SiteHeader />
       <div className="page">
-        <div className="grid">
-          <TocNav />
-          <main>
-            <Etapa01 />
-            <Etapa02 />
-            <Etapa03 />
-            <Etapa04 />
-            <Etapa05 />
-            <Etapa06 />
-            <Etapa07 />
-            <Etapa08 />
-            <Etapa09 />
-            <Cierre />
-          </main>
-        </div>
+        <main>
+          <section>
+            <div className="finding flag">
+              <span className="dot" />
+              <p>
+                El modelo de producción tiene un F1 macro de ~0.38 validado sobre
+                instituciones nunca vistas — sirve para ver tendencias generales, no para
+                decidir sobre un estudiante puntual. Cuando las dos clases más probables
+                queden muy cerca, el resultado lo va a advertir explícitamente.
+              </p>
+            </div>
+            <PrediccionForm />
+          </section>
+        </main>
       </div>
     </>
   );

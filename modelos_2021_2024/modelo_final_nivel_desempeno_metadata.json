@@ -1,0 +1,111 @@
+{
+  "target": "nivel_desempeno",
+  "labels": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "level_ranges_punt_global": {
+    "1": "0-129",
+    "2": "130-156",
+    "3": "157-189",
+    "4": "190-300"
+  },
+  "reference_year_for_age": 2024,
+  "feature_order": [
+    "periodo",
+    "estu_tipodocumento",
+    "estu_agregado",
+    "estu_genero",
+    "estu_horassemanatrabaja",
+    "estu_nse_individual",
+    "estu_pagomatriculabeca",
+    "estu_pagomatriculacredito",
+    "estu_pagomatriculapadres",
+    "estu_pagomatriculapropio",
+    "estu_semestrecursa",
+    "estu_tituloobtenidobachiller",
+    "fami_cuantoscompartebaño",
+    "fami_educacionmadre",
+    "fami_educacionpadre",
+    "fami_estratovivienda",
+    "fami_ocupacionmadre",
+    "fami_ocupacionpadre",
+    "fami_tieneautomovil",
+    "fami_tienecomputador",
+    "fami_tieneconsolavideojuegos",
+    "fami_tienehornomicroogas",
+    "fami_tieneinternet",
+    "fami_tienelavadora",
+    "fami_tienemotocicleta",
+    "fami_tieneserviciotv",
+    "edad"
+  ],
+  "feature_roles": {
+    "age_median_imputed": [
+      "edad"
+    ],
+    "binary_mode_imputed": [
+      "estu_pagomatriculabeca",
+      "estu_pagomatriculacredito",
+      "estu_pagomatriculapadres",
+      "estu_pagomatriculapropio",
+      "fami_tieneautomovil",
+      "fami_tienecomputador",
+      "fami_tieneconsolavideojuegos",
+      "fami_tienehornomicroogas",
+      "fami_tieneinternet",
+      "fami_tienelavadora",
+      "fami_tienemotocicleta",
+      "fami_tieneserviciotv"
+    ],
+    "ordinal_numeric_median_imputed": [
+      "estu_horassemanatrabaja",
+      "estu_nse_individual",
+      "estu_semestrecursa",
+      "fami_cuantoscompartebaño",
+      "fami_educacionmadre",
+      "fami_educacionpadre",
+      "fami_estratovivienda"
+    ],
+    "nominal_text_constant_imputed": [
+      "estu_tituloobtenidobachiller",
+      "fami_ocupacionmadre",
+      "fami_ocupacionpadre"
+    ],
+    "other_categorical_constant_imputed": [
+      "periodo",
+      "estu_tipodocumento",
+      "estu_agregado",
+      "estu_genero"
+    ]
+  },
+  "hyperparameters": {
+    "forest__n_estimators": 600,
+    "forest__min_samples_split": 5,
+    "forest__min_samples_leaf": 1,
+    "forest__max_features": "log2",
+    "forest__max_depth": null
+  },
+  "random_state": 42,
+  "training_rows": 30738,
+  "training_class_distribution": {
+    "1": 2607,
+    "2": 8204,
+    "3": 15160,
+    "4": 4767
+  },
+  "validated_out_of_fold_performance": {
+    "source": "analysis 12 (fold-local imputation, institution-disjoint GroupKFold)",
+    "macro_f1": 0.3786,
+    "balanced_accuracy": 0.3924
+  },
+  "raw_csv_sha256": "63feb36895735a73e7b2ff03a110db394b0796d06f06b72b3b005906da635eaa",
+  "environment": {
+    "python": "3.14.7",
+    "pandas": "3.0.5",
+    "scikit_learn": "1.9.1",
+    "joblib": "1.6.0"
+  }
+}

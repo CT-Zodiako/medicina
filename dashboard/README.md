@@ -1,12 +1,21 @@
-# Dashboard — Radiografía del Puntaje Global
+# Dashboard — Predicción de nivel de desempeño
 
-App Next.js (App Router + TypeScript) que presenta las 9 etapas del análisis de
-Saber Pro Medicina. Es un port fiel del prototipo HTML/CSS/JS de referencia a
-componentes React reales.
+App Next.js (App Router + TypeScript) con un único formulario: predice el
+nivel de desempeño (1-4) de un estudiante de Medicina que aún no presentó el
+examen Saber Pro, usando el modelo entrenado en
+`modelos_2021_2024/modelo_final_nivel_desempeno.joblib`.
 
 ## Desarrollo
 
+Necesita la API de predicción corriendo en paralelo (backend Python, no
+Node). Desde la raíz del repo:
+
 ```bash
+# Terminal 1
+.venv/bin/uvicorn api_2021_2024.main:app --port 8001
+
+# Terminal 2
+cd dashboard
 npm install
 npm run dev
 ```
@@ -20,11 +29,10 @@ npm run build
 npm start
 ```
 
-## Independencia del resto del repo
+## Cómo se conecta con el modelo
 
-Esta app **no lee ni escribe nada de `docs/` en runtime**. Todos los datos
-numéricos de las 9 etapas están hardcodeados y tipados en
-`src/data/etapas.ts`, y las 3 imágenes de evidencia (SHAP summary plot, UMAP
-etapa 4, UMAP etapa 9) están copiadas en `public/img/`. Se puede mover,
-desplegar o construir `dashboard/` de forma completamente aislada del resto
-del proyecto de análisis.
+`src/app/api/predict/route.ts` es un Route Handler que hace de proxy hacia
+`http://127.0.0.1:8001/predict` (la API FastAPI). El navegador nunca le habla
+directo a Python. Ver
+`docs_2021_2024/16_interfaz_visual.md` en la raíz del repo para la
+arquitectura completa y las limitaciones del modelo.

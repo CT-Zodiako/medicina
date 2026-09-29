@@ -1,0 +1,4 @@
+Best params: {'forest__n_estimators': 600, 'forest__min_samples_split': 5, 'forest__min_samples_leaf': 1, 'forest__max_features': 'log2', 'forest__max_depth': None}
+Tuned pooled OOF macro F1: 0.3787 (baseline 0.3721, delta +0.0066)
+Tuned pooled OOF balanced accuracy: 0.3930 (baseline 0.3759, delta +0.0171)
+Report written: /Users/zodiako/DEV/medicina/docs_2021_2024/10_tuning_modelo_b.md

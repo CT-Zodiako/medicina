@@ -22,9 +22,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Variables que afectan el Saber Pro",
+  title: "Predicción de nivel de desempeño — Saber Pro Medicina",
   description:
-    "Nueve etapas de análisis sobre qué variables se asocian con PUNT_GLOBAL en Saber Pro Medicina, y por qué el hallazgo más obvio resultó estar mal medido.",
+    "Predice el nivel de desempeño (1-4) de un estudiante de Medicina que aún no presentó el examen Saber Pro, usando variables demográficas y socioeconómicas.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

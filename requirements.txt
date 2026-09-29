@@ -20,3 +20,8 @@ umap-learn==0.5.12
 
 # --- Generacion del informe PDF (docs/conclusiones/generar_pdf.py) ---
 # weasyprint  # opcional: si falta, generar_pdf.py usa Chrome headless en macOS como fallback
+
+# --- API de prediccion (api_2021_2024/main.py), usada por dashboard/src/app/prediccion ---
+joblib==1.6.0
+fastapi==0.141.1
+uvicorn==0.54.0
