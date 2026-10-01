@@ -40,11 +40,12 @@ solo acá:**
   posibles para dividir, así que tiende a "usarla" más aunque no sea
   genuinamente más predictiva.
 - **Se mide sobre los datos de entrenamiento**, así que puede reflejar
-  memorización en vez de una señal que generaliza. Este es exactamente el
-  problema que ya vivimos en el proyecto anterior (`docs/etapa_3` a
-  `etapa_8`): la institución dominaba el ranking de importancia por MDI, pero
-  esa señal no generalizaba a instituciones nuevas era memorización, no
-  asociación real.
+  memorización en vez de una señal que generaliza. En este dataset el riesgo
+  es concreto: un identificador de alta cardinalidad como la institución
+  (`inst_cod_institucion`) puede dominar el ranking por MDI sin que esa señal
+  generalice a instituciones nuevas (memorización, no asociación real). Los
+  pasos [06](06_random_forest_mdi.md) y [09](09_validacion_groupkfold.md)
+  documentan la evidencia.
 
 **Por qué la aplicamos acá (con esa salvedad):** sigue siendo útil para
 entrenar el modelo base y tener una primera intuición, pero **nunca se usa
@@ -74,10 +75,10 @@ si no cambia nada, no lo era.
 
 **Por qué la aplicamos acá:** es la técnica que realmente responde "¿esta
 variable ayuda a predecir el nivel de desempeño en datos que el modelo no
-vio?" — que es la pregunta que nos importa. Dado que el proyecto anterior ya
-demostró que sin esta validación se puede llegar a una conclusión inflada
-(R² = 0.37 vs. 0.23 real), acá se aplica desde el principio y no como
-corrección posterior.
+vio?" — que es la pregunta que nos importa. Como sin esta validación se
+puede llegar a una conclusión inflada por memorización (en el paso 09 el
+escenario con institución rinde macro F1 0.2711 frente a 0.3721 sin ella),
+se aplica desde el principio y no como corrección posterior.
 
 ## 4. SHAP (SHapley Additive exPlanations)
 
@@ -114,7 +115,8 @@ resultados de forma honesta y no solo mostrar un ranking.
 4. **SHAP** → sobre el modelo final, para explicar cómo actúa cada variable
    relevante y sus interacciones.
 
-Esta secuencia replica, para el problema de clasificación (`nivel_desempeno`),
-la misma disciplina de validación que ya se aplicó en el proyecto anterior
-para el problema de regresión (`punt_global`), donde separar memorización de
-señal real fue lo que cambió la conclusión final del análisis.
+Esta secuencia aplica, para el problema de clasificación (`nivel_desempeno`),
+una disciplina de validación explícita: separar memorización de señal real es
+lo que determina la conclusión final del análisis (ver
+[09](09_validacion_groupkfold.md) y
+[11](11_conclusion_importancia_variables.md)).

@@ -78,7 +78,7 @@ que el modelo realmente use.
   siendo, por lejos, la variable más importante (0.0765) incluso midiendo
   sobre datos no vistos. Ojo: esto no dice si generaliza a instituciones
   *nunca vistas* en el entrenamiento (eso requeriría `GroupKFold` por
-  institución, como se hizo en el proyecto anterior para `PUNT_GLOBAL`) —
+  institución, como se hace en el paso [09](09_validacion_groupkfold.md)) —
   solo confirma que dentro de las instituciones que el modelo sí conoce, la
   variable aporta información real.
 - **`estu_fechanacimiento` se sostiene como #2**, igual que en MDI. No era

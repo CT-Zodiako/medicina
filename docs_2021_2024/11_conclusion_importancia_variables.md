@@ -63,8 +63,8 @@ de una técnica, dentro del conjunto sin institución/geografía:
 
 1. **La institución (código, origen, tipo) es la señal predictiva más
    fuerte del dataset**, pero no generaliza bien a instituciones nuevas —
-   es en parte memorización, replicando el mismo patrón que ya se había
-   encontrado en el proyecto anterior con `PUNT_GLOBAL`.
+   es en parte memorización (macro F1 0.2711 con institución frente a 0.3721
+   sin ella bajo `GroupKFold`, paso 09).
 2. **Sin institución, el modelo generaliza mejor** (F1 macro 0.37 vs. 0.27),
    aunque su techo de desempeño absoluto es modesto: predecir 4 niveles de
    desempeño con estas variables demográficas/socioeconómicas es un
@@ -72,8 +72,8 @@ de una técnica, dentro del conjunto sin institución/geografía:
 3. Las variables socioeconómicas más consistentes son **estrato, horas de
    trabajo semanal, educación de los padres, forma de pago de matrícula y
    semestre que cursa**.
-4. Esto es **asociación, no causalidad** — el mismo límite que ya se había
-   documentado en el proyecto anterior aplica acá.
+4. Esto es **asociación, no causalidad** — el modelo describe patrones
+   estadísticos, no efectos que se puedan atribuir a una variable.
 
 ## Qué falta si se quiere seguir esta línea
 

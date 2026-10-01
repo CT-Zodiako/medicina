@@ -8,7 +8,7 @@ FastAPI service that wraps the same `prediccion_core` module the CLI uses.
 
 ```
 Browser (localhost:3000)
-  └─ dashboard/src/app/prediccion/page.tsx        (form UI)
+  └─ dashboard/src/app/page.tsx                   (form UI, route `/`)
        └─ POST /api/predict (Next.js Route Handler, same origin)
             └─ proxies to → http://127.0.0.1:8001/predict (FastAPI)
                  └─ scripts_2021_2024/prediccion_core.py
@@ -37,7 +37,7 @@ Two processes, from the repository root:
 cd dashboard && npm run dev
 ```
 
-Then open `http://localhost:3000/prediccion`.
+Then open `http://localhost:3000`.
 
 If the API is not running, the Next.js route handler returns a 503 with an
 explicit message telling the user to start it — the form does not fail
@@ -62,7 +62,7 @@ silently or show a misleading result.
 
 ## Verification performed
 
-- `npm run build` in `dashboard/` completed successfully; `/prediccion` and
+- `npm run build` in `dashboard/` completed successfully; `/prediccion` (since moved to `/`, see `dashboard/src/app/page.tsx`) and
   `/api/predict` both appear in the route manifest.
 - `npm run dev` + `uvicorn api_2021_2024.main:app --port 8001` running
   together: `GET /prediccion` returned 200, and `POST /api/predict` with a
