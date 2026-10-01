@@ -1,20 +1,23 @@
 # Dependencias de Python para reproducir el pipeline 2021-2024
 # (scripts_2021_2024/) y la API de prediccion (api_2021_2024/).
 # Version exacta = la instalada y probada en el venv local del proyecto
-# (.venv/, no versionado).
+# (.venv/, no versionado). Probado con Python 3.14.7.
 #
 # Instalacion (desde la raiz del repo):
 #   python3 -m venv .venv
 #   source .venv/bin/activate
 #   pip install -r requirements.txt
 
-# --- Analisis y modelos: lectura de datos, MI, Random Forest, SHAP ---
+# --- Procesamiento y modelos: MI, Random Forest, permutation importance, SHAP ---
 numpy==2.5.3
 pandas==3.0.5
 scikit-learn==1.9.1
 shap==0.52.0
 
-# --- API de prediccion (api_2021_2024/main.py), usada por dashboard/src/app/prediccion ---
+# --- Persistencia del modelo (modelos_2021_2024/*.joblib) ---
 joblib==1.6.0
+
+# --- API de prediccion (api_2021_2024/main.py), consumida por dashboard/ ---
 fastapi==0.141.1
+pydantic==2.13.5
 uvicorn==0.54.0
