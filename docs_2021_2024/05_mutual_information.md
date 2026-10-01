@@ -109,10 +109,8 @@ el top.
 `04_importancia_variables_conceptos.md`)
 
 - `inst_cod_institucion` sigue siendo, por lejos, la variable con más MI
-  (0.2078) — 2.6 veces más que la siguiente. Esto **replica la misma
-  alerta** que ya vimos en el proyecto anterior con `PUNT_GLOBAL`: un
-  identificador de alta cardinalidad puede dominar el ranking sin que
-  necesariamente generalice a instituciones nuevas — la MI no distingue
+  (0.2078) — 2.6 veces más que la siguiente. Es una **señal de alerta**: un identificador de alta cardinalidad
+  puede dominar el ranking sin que necesariamente generalice a instituciones nuevas — la MI no distingue
   todavía entre "señal real del tipo de institución" y "memorización del
   identificador puntual". Esto se valida más adelante con permutation
   importance (paso 3 de la secuencia).

@@ -1,25 +1,18 @@
-# Dependencias de Python para reproducir los analisis de docs/etapa_1_*
-# a docs/etapa_9_* y el generador del informe consolidado
-# (docs/conclusiones/generar_pdf.py). Version exacta = la instalada y
-# probada en el venv local del proyecto (.venv/, no versionado).
+# Dependencias de Python para reproducir el pipeline 2021-2024
+# (scripts_2021_2024/) y la API de prediccion (api_2021_2024/).
+# Version exacta = la instalada y probada en el venv local del proyecto
+# (.venv/, no versionado).
 #
 # Instalacion (desde la raiz del repo):
 #   python3 -m venv .venv
 #   source .venv/bin/activate
 #   pip install -r requirements.txt
 
-# --- Analisis (etapas 1-9): lectura de datos, MI, arbol de decision,
-#     Random Forest, SHAP, PCA/UMAP ---
+# --- Analisis y modelos: lectura de datos, MI, Random Forest, SHAP ---
 numpy==2.5.3
 pandas==3.0.5
-openpyxl==3.1.5
 scikit-learn==1.9.1
-matplotlib==3.11.2
 shap==0.52.0
-umap-learn==0.5.12
-
-# --- Generacion del informe PDF (docs/conclusiones/generar_pdf.py) ---
-# weasyprint  # opcional: si falta, generar_pdf.py usa Chrome headless en macOS como fallback
 
 # --- API de prediccion (api_2021_2024/main.py), usada por dashboard/src/app/prediccion ---
 joblib==1.6.0
